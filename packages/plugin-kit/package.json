@@ -1,0 +1,26 @@
+{
+  "name": "@dsh-oa/plugin-kit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DSH OA 插件契约：类型、运行时接口、共享 UI 组件",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "typescript": "^5.5.0"
+  },
+  "files": [
+    "dist"
+  ]
+}

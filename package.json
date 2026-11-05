@@ -1,0 +1,30 @@
+{
+  "name": "dsh-oa-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "DSH OA 插件工程：运行时 + 业务模块",
+  "scripts": {
+    "build": "pnpm -r build",
+    "clean": "pnpm -r clean",
+    "typecheck": "pnpm -r typecheck",
+    "check:client": "node scripts/check-client.cjs plugins/oa-worklog/lib/client.js && node scripts/check-styles.mjs && node scripts/check-version.mjs",
+    "pack": "bash scripts/pack-all.sh",
+    "check:styles": "node scripts/check-styles.mjs",
+    "check:version": "node scripts/check-version.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.5.0"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

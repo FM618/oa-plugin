@@ -1,0 +1,6 @@
+# dsh OA 插件工程 workspace
+# packages/：跨模块共享（契约、共享 UI）
+# plugins/：每个业务域一个包
+packages:
+  - 'packages/*'
+  - 'plugins/*'

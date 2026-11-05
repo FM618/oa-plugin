@@ -1,0 +1,52 @@
+{
+  "name": "@dsh-oa/oa-worklog",
+  "version": "0.1.0",
+  "private": true,
+  "description": "工作日志模块（dual-face）：列表 / 新建 / 编辑 / 删除",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b && node scripts/build-client.mjs",
+    "clean": "rm -rf dist lib"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@dsh-oa/oa-runtime": "workspace:^",
+    "@dsh-oa/plugin-kit": "workspace:^",
+    "@deepseek-ai/cordis": "^4.0.2",
+    "@types/node": "^22.0.0",
+    "@types/react": "^18.3.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.5.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@dsh-oa/oa-runtime"
+      ],
+      "platform": "web"
+    }
+  },
+  "files": [
+    "dist",
+    "lib",
+    "cordis.patch.yml"
+  ],
+  "peerDependencies": {
+    "@dsh-oa/oa-runtime": "^0.1.0",
+    "@dsh-oa/plugin-kit": "^0.1.0"
+  }
+}
