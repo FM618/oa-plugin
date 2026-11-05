@@ -69,6 +69,36 @@ ls node_modules/@fm618/
 
 期望：`node_modules/@fm618/` 下有 `oa`、`oa-runtime`、`oa-worklog`、`plugin-kit` 四个。
 
+## 4.5 常见报错
+
+### `Public registration is not allowed`
+
+**原因**：当前 npm 源不是官方源。本机默认源常被设成国内镜像（`registry.npmmirror.com`），
+镜像只做只读同步、没有账号体系，所以登录会被拒。
+
+**处理**：登录和发布都显式指定官方源，**不要**改全局 registry（会让日常安装变慢）。
+
+```bash
+npm login  --registry=https://registry.npmjs.org/
+npm whoami --registry=https://registry.npmjs.org/
+```
+
+发布不用手工加参数：四个包的 `publishConfig` 里已固定
+`"registry": "https://registry.npmjs.org/"`，`npm publish` 会自动走官方源。
+
+### `403 Forbidden` / `404 Not Found` on publish
+
+组织名不是 `fm618`，或当前账号不是该组织成员。核对：
+
+```bash
+npm org ls fm618 --registry=https://registry.npmjs.org/
+```
+
+### `402 Payment Required`
+
+包被当成私有包发布（scoped 包默认私有）。`publishConfig.access: public` 已配好，
+若仍报错，检查是否用了别的 `--access` 参数覆盖。
+
 ## 5. 发坏了怎么办
 
 | 情形 | 做法 |
