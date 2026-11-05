@@ -19,9 +19,6 @@
     "build": "tsc -b && node scripts/build-client.mjs",
     "clean": "rm -rf dist lib"
   },
-  "dependencies": {
-    "@fm618/plugin-kit": "workspace:^"
-  },
   "devDependencies": {
     "@fm618/oa-runtime": "workspace:^",
     "@fm618/plugin-kit": "workspace:^",

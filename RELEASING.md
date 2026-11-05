@@ -82,16 +82,18 @@ ls node_modules/@fm618/
 ## 4.4 依赖关系（发布顺序的依据）
 
 ```
-@fm618/oa          (bundle)  dependencies → runtime + worklog + plugin-kit
-@fm618/oa-worklog            dependencies → plugin-kit     peer → oa-runtime
-@fm618/oa-runtime            dependencies → plugin-kit
-@fm618/plugin-kit            无依赖
+@fm618/oa          (bundle)  dependencies → runtime + worklog
+@fm618/oa-worklog            peer → oa-runtime          （自己无运行时依赖）
+@fm618/oa-runtime            dependencies → plugin-kit  （用到 OaApiError 类）
+@fm618/plugin-kit            无依赖，且**只能被依赖，不能直接安装**
 ```
 
-两条规则：
+三条规则：
 
-- **`plugin-kit` 是库，不是插件**。它没有 `dsh.bundle.patch`，插件管理器会拒绝安装
-  （报「这个包没有声明组合包」）。它只能作为依赖被带进来。
+- **`plugin-kit` 是库，不是插件**。没有 `dsh.bundle.patch`，插件管理器会拒绝安装
+  （报「这个包没有声明组合包」）。它只作为 `oa-runtime` 的依赖被带进来。
+- **只有 `oa-runtime` 真的用到 kit**（`OaApiError`，三个文件）。`oa-worklog` 一行都没用，
+  所以它不声明 kit。
 - `oa-worklog` 对 `oa-runtime` 是 **peer**：runtime 是被挂载的插件，由用户显式安装。
 
 ## 4.5 常见报错

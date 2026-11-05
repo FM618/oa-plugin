@@ -15,7 +15,6 @@
     "clean": "echo 'oa-bundle: 无需清理'"
   },
   "dependencies": {
-    "@fm618/plugin-kit": "workspace:^",
     "@fm618/oa-runtime": "workspace:^",
     "@fm618/oa-worklog": "workspace:^"
   },

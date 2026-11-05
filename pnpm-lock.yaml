@@ -35,9 +35,6 @@ importers:
       '@fm618/oa-worklog':
         specifier: workspace:^
         version: link:../oa-worklog
-      '@fm618/plugin-kit':
-        specifier: workspace:^
-        version: link:../../packages/plugin-kit
 
   plugins/oa-runtime:
     dependencies:
@@ -62,10 +59,6 @@ importers:
         version: 5.9.3
 
   plugins/oa-worklog:
-    dependencies:
-      '@fm618/plugin-kit':
-        specifier: workspace:^
-        version: link:../../packages/plugin-kit
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: ^4.0.2
@@ -73,6 +66,9 @@ importers:
       '@fm618/oa-runtime':
         specifier: workspace:^
         version: link:../oa-runtime
+      '@fm618/plugin-kit':
+        specifier: workspace:^
+        version: link:../../packages/plugin-kit
       '@types/node':
         specifier: ^22.0.0
         version: 22.20.5
