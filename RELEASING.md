@@ -35,19 +35,29 @@ pnpm run pack        # 产物在 dist/，四个 tgz
 
 包名形如 `fm618-oa-0.1.0.tgz`（scope 里的 `@` 和 `/` 被替换为 `-`）。
 
+## 2.5 预检（强烈建议）
+
+```bash
+npm publish ./dist/fm618-plugin-kit-0.1.0.tgz --dry-run --registry=https://registry.npmjs.org/
+```
+
+`--dry-run` 不上传，但会列出**将要发布的文件清单**。用它确认 `LICENSE`、`NOTICE`、
+`dist/`、`cordis.patch.yml` 都在包里——少了任何一样，都是 `files` 字段配错。
+
+
 ## 3. 发布（顺序不能反）
 
 ```bash
-npm publish dist/fm618-plugin-kit-0.1.0.tgz   --access public
-npm publish dist/fm618-oa-runtime-0.1.0.tgz   --access public
-npm publish dist/fm618-oa-worklog-0.1.0.tgz   --access public
-npm publish dist/fm618-oa-0.1.0.tgz           --access public
+npm publish ./dist/fm618-plugin-kit-0.1.0.tgz
+npm publish ./dist/fm618-oa-runtime-0.1.0.tgz
+npm publish ./dist/fm618-oa-worklog-0.1.0.tgz
+npm publish ./dist/fm618-oa-0.1.0.tgz
 ```
 
 | 规则 | 原因 |
 | :--- | :--- |
 | **先发被依赖的，最后发总装包** | 总装包依赖另外三个，顺序反了用户装不上 |
-| 必须带 `--access public` | scoped 包默认按私有发布，缺参数会失败或要求付费 |
+| 不用手工带 `--access public` | 已写进各包 `publishConfig`，缺了它 scoped 包会被当私有包 |
 | 已经写进 `publishConfig.access` | 即使忘带参数也不会发成私有 |
 
 ## 4. 验证（发布后立刻做）
@@ -85,6 +95,25 @@ npm whoami --registry=https://registry.npmjs.org/
 
 发布不用手工加参数：四个包的 `publishConfig` 里已固定
 `"registry": "https://registry.npmjs.org/"`，`npm publish` 会自动走官方源。
+
+### 发布时要求 `git ls-remote ssh://git@github.com/...`
+
+**原因**：`npm publish dist/xxx.tgz` 少了 `./`，npm 把 `dist/xxx` 当成 GitHub 的 `owner/repo`
+简写，于是跑去连 GitHub。
+
+**处理**：路径写成 `./dist/xxx.tgz` 或绝对路径。
+
+### `EPERM ... ~/.npm/_cacache`（root 拥有的缓存文件）
+
+**原因**：历史遗留的 root 属主文件。
+
+**处理**：
+
+```bash
+sudo chown -R $(id -u):$(id -g) ~/.npm
+```
+
+或临时换缓存：`npm publish ./dist/xxx.tgz --cache /tmp/npm-cache`
 
 ### `403 Forbidden` / `404 Not Found` on publish
 
