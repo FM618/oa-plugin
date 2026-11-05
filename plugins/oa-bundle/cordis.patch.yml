@@ -4,8 +4,8 @@
 # 「设置 → OA 连接」里填写，保存在 $DSH_HOME/oa/runtime.json。
 - insert:
     - id: oa-runtime
-      name: '@dsh-oa/oa-runtime'
+      name: '@fm618/oa-runtime'
       config:
         serverUrl: !!js process.env.OA_SERVER_URL ?? ""
     - id: oa-worklog
-      name: '@dsh-oa/oa-worklog'
+      name: '@fm618/oa-worklog'

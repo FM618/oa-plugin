@@ -29,13 +29,13 @@ importers:
 
   plugins/oa-bundle:
     dependencies:
-      '@dsh-oa/oa-runtime':
+      '@fm618/oa-runtime':
         specifier: workspace:^
         version: link:../oa-runtime
-      '@dsh-oa/oa-worklog':
+      '@fm618/oa-worklog':
         specifier: workspace:^
         version: link:../oa-worklog
-      '@dsh-oa/plugin-kit':
+      '@fm618/plugin-kit':
         specifier: workspace:^
         version: link:../../packages/plugin-kit
 
@@ -44,7 +44,7 @@ importers:
       '@deepseek-ai/cordis':
         specifier: ^4.0.2
         version: 4.1.0
-      '@dsh-oa/plugin-kit':
+      '@fm618/plugin-kit':
         specifier: workspace:^
         version: link:../../packages/plugin-kit
       '@types/node':
@@ -65,10 +65,10 @@ importers:
       '@deepseek-ai/cordis':
         specifier: ^4.0.2
         version: 4.1.0
-      '@dsh-oa/oa-runtime':
+      '@fm618/oa-runtime':
         specifier: workspace:^
         version: link:../oa-runtime
-      '@dsh-oa/plugin-kit':
+      '@fm618/plugin-kit':
         specifier: workspace:^
         version: link:../../packages/plugin-kit
       '@types/node':

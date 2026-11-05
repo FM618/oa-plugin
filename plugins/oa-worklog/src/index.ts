@@ -1,10 +1,10 @@
 /**
- * @dsh-oa/oa-worklog —— host 半部
+ * @fm618/oa-worklog —— host 半部
  *
  * 只做一件事：向运行时声明本模块允许调用的服务端操作（白名单）。
  * 没有 fetch、没有令牌、没有地址。
  */
-import type { OaRuntimeService } from '@dsh-oa/oa-runtime'
+import type { OaRuntimeService } from '@fm618/oa-runtime'
 
 /** 只需要 oaRuntime 一个服务 */
 type WorklogContext = { oaRuntime: OaRuntimeService }

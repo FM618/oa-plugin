@@ -1,4 +1,4 @@
 # 工作日志模块：依赖 oa-runtime（inject: ['oaRuntime']）
 - insert:
     - id: oa-worklog
-      name: '@dsh-oa/oa-worklog'
+      name: '@fm618/oa-worklog'

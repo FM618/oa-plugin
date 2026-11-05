@@ -2,6 +2,6 @@
 # 服务器地址通过 OA_SERVER_URL 注入（如 https://oa.example.com）
 - insert:
     - id: oa-runtime
-      name: '@dsh-oa/oa-runtime'
+      name: '@fm618/oa-runtime'
       config:
         serverUrl: !!js process.env.OA_SERVER_URL ?? "http://127.0.0.1:8099"

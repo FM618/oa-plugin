@@ -1,10 +1,10 @@
-# @dsh-oa/oa-bundle
+# @fm618/oa-bundle
 
 OA 插件总装包：**不含业务代码**，只有装配清单。装它等于一次装好：
 
-- `@dsh-oa/oa-runtime` —— 连接、登录、令牌、设置页
-- `@dsh-oa/oa-worklog` —— 工作日志模块
-- `@dsh-oa/plugin-kit` —— 两者共用的契约
+- `@fm618/oa-runtime` —— 连接、登录、令牌、设置页
+- `@fm618/oa-worklog` —— 工作日志模块
+- `@fm618/plugin-kit` —— 两者共用的契约
 
 ## 安装
 
@@ -15,8 +15,8 @@ OA 插件总装包：**不含业务代码**，只有装配清单。装它等于�
 总装包适合"一次装齐"。如果你只需要某个模块，也可以单独安装：
 
 ```bash
-dsh plugin add @dsh-oa/oa-runtime      # 运行时：必装
-dsh plugin add @dsh-oa/oa-worklog      # 工作日志
+dsh plugin add @fm618/oa-runtime      # 运行时：必装
+dsh plugin add @fm618/oa-worklog      # 工作日志
 ```
 
 **顺序：先 runtime，后模块。** 模块缺 runtime 会静默 pending（不报错、不工作），

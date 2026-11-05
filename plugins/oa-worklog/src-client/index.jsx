@@ -1,5 +1,5 @@
 /**
- * @dsh-oa/oa-worklog —— client 半部
+ * @fm618/oa-worklog —— client 半部
  *
  * 列表 / 甘特双模式（甘特为周视图：x 轴 7 日列，y 轴 00:00~24:00）。
  * 数据全部经 runtime.invoke 走 host 半部，浏览器拿不到地址与令牌。

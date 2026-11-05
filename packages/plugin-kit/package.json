@@ -1,5 +1,5 @@
 {
-  "name": "@dsh-oa/plugin-kit",
+  "name": "@fm618/plugin-kit",
   "version": "0.1.0",
   "private": true,
   "description": "DSH OA 插件契约：类型、运行时接口、共享 UI 组件",
@@ -21,6 +21,32 @@
     "typescript": "^5.5.0"
   },
   "files": [
-    "dist"
-  ]
+    "dist",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "license": "Apache-2.0",
+  "author": {
+    "name": "无锡星环智能信息科技有限公司",
+    "url": "https://github.com/FM618"
+  },
+  "homepage": "https://github.com/FM618",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FM618/oa-plugin.git",
+    "directory": "packages/plugin-kit"
+  },
+  "bugs": {
+    "url": "https://github.com/FM618/oa-plugin/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "oa",
+    "contract",
+    "types"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }

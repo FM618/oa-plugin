@@ -1,5 +1,5 @@
 /**
- * @dsh-oa/plugin-kit —— 插件契约（只有类型与一个错误类，不含业务、不含网络）
+ * @fm618/plugin-kit —— 插件契约（只有类型与一个错误类，不含业务、不含网络）
  */
 import type { ComponentType } from 'react'
 

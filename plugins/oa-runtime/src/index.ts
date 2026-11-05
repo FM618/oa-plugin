@@ -1,5 +1,5 @@
 /**
- * @dsh-oa/oa-runtime —— host 半部（BFF）
+ * @fm618/oa-runtime —— host 半部（BFF）
  *
  * 职责：
  * 1. 持有服务器地址与令牌（模块与浏览器都拿不到）
@@ -8,7 +8,7 @@
  *
  * 路由是**固定路径 + 操作白名单**，不是通用代理（ADR §9.1 第 1 条）。
  */
-import { OaApiError } from '@dsh-oa/plugin-kit'
+import { OaApiError } from '@fm618/plugin-kit'
 
 import { OaClient } from './oa-client.js'
 import { SessionVault, type CredentialApi } from './session-vault.js'

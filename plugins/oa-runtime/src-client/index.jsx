@@ -1,9 +1,9 @@
 /**
- * @dsh-oa/oa-runtime —— client 半部
+ * @fm618/oa-runtime —— client 半部
  *
  * - root slot：未登录时整页登录页（priority -1 盖住 AppFrame）
  * - 登录后释放 root，注册各模块的 sidebar.panellist 入口与 main 面板
- * - 模块通过 `require('@dsh-oa/oa-runtime/client').registerModule(...)` 声明自己
+ * - 模块通过 `require('@fm618/oa-runtime/client').registerModule(...)` 声明自己
  *
  * 令牌不在浏览器里：所有请求打同源 /api/oa/*，由 host 半部带令牌转发。
  */
