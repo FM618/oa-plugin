@@ -1,0 +1,11 @@
+# OA 插件总装：用户只装这一个包，下面两个条目由本 patch 一次插入。
+#
+# 服务器地址默认取 OA_SERVER_URL（企业预置）；为空时由用户在
+# 「设置 → OA 连接」里填写，保存在 $DSH_HOME/oa/runtime.json。
+- insert:
+    - id: oa-runtime
+      name: '@dsh-oa/oa-runtime'
+      config:
+        serverUrl: !!js process.env.OA_SERVER_URL ?? ""
+    - id: oa-worklog
+      name: '@dsh-oa/oa-worklog'

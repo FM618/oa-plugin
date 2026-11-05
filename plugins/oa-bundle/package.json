@@ -1,0 +1,20 @@
+{
+  "name": "@dsh-oa/oa-bundle",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OA 插件总装：一次安装运行时与全部业务模块（不含代码，只有装配清单）",
+  "type": "module",
+  "files": ["cordis.patch.yml", "README.md"],
+  "scripts": {
+    "build": "node -e \"console.log('oa-bundle: 无构建产物，仅装配清单')\"",
+    "clean": "echo 'oa-bundle: 无需清理'"
+  },
+  "dependencies": {
+    "@dsh-oa/plugin-kit": "workspace:^",
+    "@dsh-oa/oa-runtime": "workspace:^",
+    "@dsh-oa/oa-worklog": "workspace:^"
+  },
+  "dsh": {
+    "bundle": { "patch": "./cordis.patch.yml" }
+  }
+}

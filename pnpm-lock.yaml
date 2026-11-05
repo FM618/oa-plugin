@@ -27,6 +27,18 @@ importers:
         specifier: ^5.5.0
         version: 5.9.3
 
+  plugins/oa-bundle:
+    dependencies:
+      '@dsh-oa/oa-runtime':
+        specifier: workspace:^
+        version: link:../oa-runtime
+      '@dsh-oa/oa-worklog':
+        specifier: workspace:^
+        version: link:../oa-worklog
+      '@dsh-oa/plugin-kit':
+        specifier: workspace:^
+        version: link:../../packages/plugin-kit
+
   plugins/oa-runtime:
     devDependencies:
       '@deepseek-ai/cordis':

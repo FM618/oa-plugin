@@ -11,7 +11,7 @@ pnpm -r build >/dev/null
 rm -rf "$ROOT/dist"
 mkdir -p "$ROOT/dist"
 
-for pkg in packages/plugin-kit plugins/oa-runtime plugins/oa-worklog; do
+for pkg in packages/plugin-kit plugins/oa-runtime plugins/oa-worklog plugins/oa-bundle; do
   ( cd "$pkg" && pnpm pack --pack-destination "$ROOT/dist" >/dev/null )
 done
 
