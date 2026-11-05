@@ -18,15 +18,6 @@ importers:
         specifier: ^5.5.0
         version: 5.9.3
 
-  packages/plugin-kit:
-    devDependencies:
-      '@types/react':
-        specifier: ^18.3.0
-        version: 18.3.31
-      typescript:
-        specifier: ^5.5.0
-        version: 5.9.3
-
   plugins/oa-bundle:
     dependencies:
       '@fm618/oa-runtime':
@@ -37,10 +28,6 @@ importers:
         version: link:../oa-worklog
 
   plugins/oa-runtime:
-    dependencies:
-      '@fm618/plugin-kit':
-        specifier: workspace:^
-        version: link:../../packages/plugin-kit
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: ^4.0.2
@@ -66,9 +53,6 @@ importers:
       '@fm618/oa-runtime':
         specifier: workspace:^
         version: link:../oa-runtime
-      '@fm618/plugin-kit':
-        specifier: workspace:^
-        version: link:../../packages/plugin-kit
       '@types/node':
         specifier: ^22.0.0
         version: 22.20.5

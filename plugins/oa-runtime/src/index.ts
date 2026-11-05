@@ -8,7 +8,7 @@
  *
  * 路由是**固定路径 + 操作白名单**，不是通用代理（ADR §9.1 第 1 条）。
  */
-import { OaApiError } from '@fm618/plugin-kit'
+import { OaApiError } from './contract.js'
 
 import { OaClient } from './oa-client.js'
 import { SessionVault, type CredentialApi } from './session-vault.js'
@@ -17,6 +17,17 @@ import { diagnose } from './diagnostics.js'
 import type { OaOperation, OaRuntimeService, RuntimeContext } from './context.js'
 
 export type { OaOperation, OaRuntimeService, RuntimeContext } from './context.js'
+
+// 契约对外可见：模块作者从本包 import 类型与错误类，不再有单独的 kit 包
+export type {
+  OaUser,
+  OaStatus,
+  OaModule,
+  OaPanelProps,
+  OaInvokeOptions,
+  OaRuntimeApi,
+} from './contract.js'
+export { OaApiError } from './contract.js'
 
 export interface RuntimeConfig {
   /** OA 服务端地址，如 https://oa.example.com */

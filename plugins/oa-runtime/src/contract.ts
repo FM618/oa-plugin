@@ -1,5 +1,6 @@
 /**
- * @fm618/plugin-kit —— 插件契约（只有类型与一个错误类，不含业务、不含网络）
+ * 插件契约：只有类型与一个错误类，不含业务、不含网络。
+ * 由 @fm618/oa-runtime 对外 re-export，模块作者从这里拿类型。
  */
 import type { ComponentType } from 'react'
 

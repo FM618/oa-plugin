@@ -22,5 +22,4 @@ dsh plugin add @fm618/oa-worklog      # 工作日志
 **顺序：先 runtime，后模块。** 模块缺 runtime 会静默 pending（不报错、不工作），
 所以自己组合时务必先装 runtime。
 
-> `@fm618/plugin-kit` **不要单独安装**：它是库不是插件，没有 `dsh.bundle.patch`，
-> 插件管理器会以「这个包没有声明组合包」拒绝。它作为 `oa-runtime` 的依赖自动安装。
+> 契约（类型 + `OaApiError`）**内置在 `@fm618/oa-runtime`**，不需要单独安装任何契约包。

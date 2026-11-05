@@ -4,7 +4,7 @@
  * 顺序：地址格式 → 网络可达 → 服务端身份 → 版本兼容。
  * 每一步失败都给一句人能看懂的话，而不是一个 fetch 错误。
  */
-import { OaApiError } from '@fm618/plugin-kit'
+import { OaApiError } from './contract.js'
 
 import { OaClient } from './oa-client.js'
 import { normalizeServerUrl } from './settings.js'

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 把三个包打成 tgz，统一放到 oa-plugin/dist/
+# 把三个插件包打成 tgz，统一放到 oa-plugin/dist/
 # 用法：pnpm pack   （或 ./scripts/pack-all.sh）
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -11,7 +11,7 @@ pnpm -r build >/dev/null
 rm -rf "$ROOT/dist"
 mkdir -p "$ROOT/dist"
 
-for pkg in packages/plugin-kit plugins/oa-runtime plugins/oa-worklog plugins/oa-bundle; do
+for pkg in plugins/oa-runtime plugins/oa-worklog plugins/oa-bundle; do
   ( cd "$pkg" && pnpm pack --pack-destination "$ROOT/dist" >/dev/null )
 done
 

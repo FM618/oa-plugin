@@ -21,7 +21,6 @@
   },
   "devDependencies": {
     "@fm618/oa-runtime": "workspace:^",
-    "@fm618/plugin-kit": "workspace:^",
     "@deepseek-ai/cordis": "^4.0.2",
     "@types/node": "^22.0.0",
     "@types/react": "^18.3.0",

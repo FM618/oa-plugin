@@ -3,7 +3,7 @@
  *
  * 令牌只存在这个对象里：模块与浏览器都拿不到（ADR §6.2「只有 base 知道地址和 token」）。
  */
-import { OaApiError } from '@fm618/plugin-kit'
+import { OaApiError } from './contract.js'
 
 export interface OaClientConfig {
   serverUrl: string
