@@ -19,7 +19,9 @@
     "build": "tsc -b && node scripts/build-client.mjs",
     "clean": "rm -rf dist lib"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@fm618/plugin-kit": "workspace:^"
+  },
   "devDependencies": {
     "@fm618/plugin-kit": "workspace:^",
     "@deepseek-ai/cordis": "^4.0.2",
@@ -44,9 +46,6 @@
     "LICENSE",
     "NOTICE"
   ],
-  "peerDependencies": {
-    "@fm618/plugin-kit": "^0.1.0"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "无锡星环智能信息科技有限公司",

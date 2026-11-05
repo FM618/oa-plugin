@@ -79,6 +79,21 @@ ls node_modules/@fm618/
 
 期望：`node_modules/@fm618/` 下有 `oa`、`oa-runtime`、`oa-worklog`、`plugin-kit` 四个。
 
+## 4.4 依赖关系（发布顺序的依据）
+
+```
+@fm618/oa          (bundle)  dependencies → runtime + worklog + plugin-kit
+@fm618/oa-worklog            dependencies → plugin-kit     peer → oa-runtime
+@fm618/oa-runtime            dependencies → plugin-kit
+@fm618/plugin-kit            无依赖
+```
+
+两条规则：
+
+- **`plugin-kit` 是库，不是插件**。它没有 `dsh.bundle.patch`，插件管理器会拒绝安装
+  （报「这个包没有声明组合包」）。它只能作为依赖被带进来。
+- `oa-worklog` 对 `oa-runtime` 是 **peer**：runtime 是被挂载的插件，由用户显式安装。
+
 ## 4.5 常见报错
 
 ### `Public registration is not allowed`

@@ -19,7 +19,9 @@
     "build": "tsc -b && node scripts/build-client.mjs",
     "clean": "rm -rf dist lib"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@fm618/plugin-kit": "workspace:^"
+  },
   "devDependencies": {
     "@fm618/oa-runtime": "workspace:^",
     "@fm618/plugin-kit": "workspace:^",
@@ -48,8 +50,7 @@
     "NOTICE"
   ],
   "peerDependencies": {
-    "@fm618/oa-runtime": "^0.1.0",
-    "@fm618/plugin-kit": "^0.1.0"
+    "@fm618/oa-runtime": "^0.1.0"
   },
   "license": "Apache-2.0",
   "author": {
