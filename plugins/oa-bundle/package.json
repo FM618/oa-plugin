@@ -1,6 +1,6 @@
 {
   "name": "@fm618/oa",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "OA 插件总装：一次安装运行时与全部业务模块（不含代码，只有装配清单）",
   "type": "module",

@@ -1,6 +1,6 @@
 {
   "name": "@fm618/oa-worklog",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "工作日志模块（dual-face）：列表 / 新建 / 编辑 / 删除",
   "type": "module",

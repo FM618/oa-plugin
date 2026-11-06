@@ -1,6 +1,6 @@
 {
   "name": "@fm618/oa-runtime",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "OA 运行时：连接、登录、令牌、能力、导航（dual-face）",
   "type": "module",

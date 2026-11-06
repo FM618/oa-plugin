@@ -95,12 +95,32 @@ export function apply(ctx: RuntimeContext, config: RuntimeConfig) {
   const ops = new Map<string, OaOperation>()
   const vault = new SessionVault()
 
-  let restored = false
-  /** 设置与凭据服务都就绪后恢复一次；两者谁先到都行 */
-  async function tryRestore() {
-    if (restored || !vault.available || !client.baseUrl) return
-    restored = true
-    await restoreSession()
+  let settingsReady = false
+  let restoreAttempt: Promise<void> | null = null
+  const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+
+  /** 只真正恢复一次；失败只记日志，不影响后续请求 */
+  function ensureRestore(): Promise<void> {
+    restoreAttempt ??= restoreSession().catch((error) => {
+      console.warn('[oa-runtime] 恢复会话失败：', error instanceof Error ? error.message : String(error))
+    })
+    return restoreAttempt
+  }
+
+  /**
+   * 等"设置就绪 + 凭据服务就绪"后完成一次恢复。
+   *
+   * 客户端 boot() 在页面一加载就请求 /me，而恢复是异步的（读 runtime.json、挂凭据服务）。
+   * 不等待就会出现"重启后明明有会话，界面却显示未登录"——登录态没丢，是竞态。
+   * 上限 2.5 秒；超时按未登录处理，不能把界面卡死。
+   */
+  async function waitForRestore(timeoutMs = 2500): Promise<void> {
+    const deadline = Date.now() + timeoutMs
+    while (!settingsReady && Date.now() < deadline) await sleep(20)
+    // 凭据服务是软依赖：通常同一 tick 就挂上，额外给 200ms
+    const credentialDeadline = Math.min(deadline, Date.now() + 200)
+    while (!vault.available && Date.now() < credentialDeadline) await sleep(20)
+    if (vault.available && client.baseUrl) await ensureRestore()
   }
 
   /** 启动时尝试恢复上次的会话（令牌在凭据服务里，不在浏览器里） */
@@ -153,14 +173,21 @@ export function apply(ctx: RuntimeContext, config: RuntimeConfig) {
       console.info(`[oa-runtime] 使用设置文件中的服务器地址：${resolved.serverUrl || '(未配置)'}`)
     }
     serverUrlSource = resolved.source
-    await tryRestore()
+  })().catch((error) => {
+    console.warn('[oa-runtime] 读取设置失败：', error instanceof Error ? error.message : String(error))
+  }).finally(() => {
+    settingsReady = true
+  })
+  void (async () => {
+    while (!settingsReady) await sleep(20)
+    if (vault.available && client.baseUrl) await ensureRestore()
   })()
 
   // credentials 是软依赖：组合里没有凭据服务时，退化为"重启后需重新登录"
   ctx.inject(['credentials'], async (credCtx) => {
     const credentials = (credCtx as unknown as { credentials: CredentialApi }).credentials
     vault.attach(credentials)
-    await tryRestore()
+    if (settingsReady && client.baseUrl) await ensureRestore()
   })
 
   // connection 是软依赖：仅 DSH Web / 桌面载体提供
@@ -218,10 +245,14 @@ export function apply(ctx: RuntimeContext, config: RuntimeConfig) {
             }
             const stored = await settingsStore.read()
             await settingsStore.write({ ...stored, serverUrl: candidate })
-            client.setServerUrl(candidate)
-            await vault.clear()
-            restored = false
-            await tryRestore()
+            // 地址没变就只更新配置：照旧清令牌/清凭据的话，
+            // 用户点一次「测试并保存」就会被无声注销
+            if (candidate !== client.baseUrl) {
+              client.setServerUrl(candidate)
+              await vault.clear()
+              restoreAttempt = null
+              await ensureRestore()
+            }
             return respond(ok({ serverUrl: candidate, name: probe.serverName ?? '', apiVersion: probe.apiVersion ?? '' }))
           } catch (error) {
             return fail(error)
@@ -279,6 +310,8 @@ export function apply(ctx: RuntimeContext, config: RuntimeConfig) {
         requestBody: 'buffered',
         fetch: async () => {
           try {
+            // 页面一加载就可能打到这里：先等 host 把令牌从凭据服务恢复出来
+            await waitForRestore()
             if (!hasServer()) return notConfigured()
             if (!client.authenticated) {
               return respond({ code: 401, message: '未登录', errorCode: 'UNAUTHENTICATED', data: null }, 401)
@@ -296,6 +329,8 @@ export function apply(ctx: RuntimeContext, config: RuntimeConfig) {
         requestBody: 'buffered',
         fetch: async (request: Request) => {
           try {
+            // 页面一加载就可能打到这里：先等 host 把令牌从凭据服务恢复出来
+            await waitForRestore()
             if (!hasServer()) return notConfigured()
             if (!client.authenticated) {
               return respond({ code: 401, message: '未登录', errorCode: 'UNAUTHENTICATED', data: null }, 401)
