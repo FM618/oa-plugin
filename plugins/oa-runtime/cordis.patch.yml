@@ -4,4 +4,4 @@
     - id: oa-runtime
       name: '@fm618/oa-runtime'
       config:
-        serverUrl: !!js process.env.OA_SERVER_URL ?? "http://127.0.0.1:8099"
+        serverUrl: !!js process.env.OA_SERVER_URL ?? ""

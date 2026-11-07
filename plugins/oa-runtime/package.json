@@ -1,6 +1,6 @@
 {
   "name": "@fm618/oa-runtime",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "private": true,
   "description": "OA 运行时：连接、登录、令牌、能力、导航（dual-face）",
   "type": "module",
@@ -17,6 +17,8 @@
   },
   "scripts": {
     "build": "tsc -b && node scripts/build-client.mjs",
+    "check:connect": "node scripts/smoke-connect.mjs",
+    "check:settings": "node scripts/smoke-settings.mjs",
     "clean": "rm -rf dist lib"
   },
   "devDependencies": {

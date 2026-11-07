@@ -10,7 +10,7 @@ import { OaClient } from './oa-client.js'
 import { normalizeServerUrl } from './settings.js'
 
 /** 客户端版本；发版时必须与本包 version 同步（见 scripts/check-version.mjs） */
-export const CLIENT_VERSION = '0.1.1'
+export const CLIENT_VERSION = '0.1.0'
 
 export interface Diagnostics {
   serverUrl: string

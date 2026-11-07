@@ -140,6 +140,17 @@ export function apply(ctx: RuntimeContext, config: RuntimeConfig) {
     console.info('[oa-runtime] 已从凭据服务恢复上次会话（重启无需重新登录）')
   }
 
+  /** 令牌交给凭据服务：重启后免登录（D-034）。存不进去只影响免登录，不影响本次登录 */
+  async function rememberSession(expiresIn: number): Promise<void> {
+    const token = client.tokenValue
+    if (!token) return
+    await vault.save({
+      serverUrl: client.baseUrl,
+      token,
+      expiresAt: Date.now() + expiresIn * 1000,
+    })
+  }
+
   const notConfigured = () =>
     respond(
       { code: 503, message: '尚未接入 OA 服务器：请让管理员配置服务器地址', errorCode: 'NO_SERVER', data: null },
@@ -265,26 +276,47 @@ export function apply(ctx: RuntimeContext, config: RuntimeConfig) {
         requestBody: 'buffered',
         fetch: async (request: Request) => {
           try {
-            if (!hasServer()) return notConfigured()
             const body = await readJson(request)
-            const username = String(body.username ?? '')
+            const username = String(body.username ?? '').trim()
             const password = String(body.password ?? '')
             if (!username || !password) {
               return respond({ code: 400, message: '用户名与密码不能为空', errorCode: 'VALIDATION', data: null }, 400)
             }
+
+            // 候选地址：设置页「连接并登录」把用户刚填的地址一并带上来。
+            // 先在这台服务器上登录，两步都成功才提交（写设置、切地址、存令牌）——
+            // 密码打错时现有会话与地址一点不动（D-079）。
+            const hasCandidate = body.serverUrl !== undefined && body.serverUrl !== null
+            const candidate = hasCandidate ? normalizeServerUrl(String(body.serverUrl ?? '')) : ''
+            if (hasCandidate && !candidate) {
+              return respond({ code: 400, message: '服务器地址不合法（需以 http:// 或 https:// 开头）', errorCode: 'VALIDATION', data: null }, 400)
+            }
+
+            // 先等启动恢复结束：否则它在提交之后才跑，会用旧凭据覆盖/清掉刚存的会话
+            await waitForRestore()
+
+            if (candidate && candidate !== client.baseUrl) {
+              const probe = new OaClient({ serverUrl: candidate, clientType: config?.clientType })
+              const result = await probe.login(username, password)
+              restoreAttempt = Promise.resolve()
+              const stored = await settingsStore.read()
+              await settingsStore.write({ ...stored, serverUrl: candidate, lastUsername: username })
+              client.setServerUrl(candidate)
+              client.setToken(probe.tokenValue)
+              await rememberSession(result.expiresIn)
+              return respond(ok({ ...result, serverUrl: candidate, switched: true }))
+            }
+
+            if (!hasServer()) return notConfigured()
             const result = await client.login(username, password)
+            restoreAttempt = Promise.resolve()
             // 记住用户名：即使日后令牌不可用，登录页也能预填
             const stored = await settingsStore.read()
             await settingsStore.write({ ...stored, lastUsername: username })
-            const token = client.tokenValue
-            if (token) {
-              await vault.save({
-                serverUrl: client.baseUrl,
-                token,
-                expiresAt: Date.now() + result.expiresIn * 1000,
-              })
-            }
-            return respond(ok({ expiresIn: result.expiresIn, kicked: result.kicked, previousDevice: result.previousDevice }))
+            await rememberSession(result.expiresIn)
+            return respond(
+              ok({ ...result, serverUrl: client.baseUrl, switched: false }),
+            )
           } catch (error) {
             return fail(error)
           }

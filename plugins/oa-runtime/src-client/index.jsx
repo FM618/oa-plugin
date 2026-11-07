@@ -114,7 +114,14 @@ function registerPanels() {
 
 // ── 设置：OA 连接 ────────────────────────────────────────────────────
 /**
- * 设置页里的「OA 连接」：服务器地址、当前状态、退出登录。
+ * 设置页里的「OA 连接」：当前连接 + 一个表单完成「连接并登录」。
+ *
+ * 为什么是一个按钮、两行输出（D-079）：
+ * - 原来「测试并保存」只探活、不登录，第二个按钮才登录；两件事各自成功，
+ *   状态行却只有一行，读起来像"新地址测试通过 = 已登录"；
+ * - 现在按用户的心智顺序走：先证明服务器通，再用这组账号登录。两行各说一件事，
+ *   第一行失败就不再尝试登录；
+ * - 提交是原子的：两行都成功才写配置、切服务器、存令牌。密码打错时现有会话一点不动。
  *
  * 登录之后引导页就不再出现，所以修改服务器必须有常驻入口——这是它存在的理由。
  */
@@ -123,68 +130,102 @@ function OaConnectionSection() {
   const [url, setUrl] = React.useState('')
   const [username, setUsername] = React.useState('')
   const [password, setPassword] = React.useState('')
-  const [busy, setBusy] = React.useState('')
-  const [message, setMessage] = React.useState('')
-  const [error, setError] = React.useState('')
+  const [loaded, setLoaded] = React.useState(false)
+  const [busy, setBusy] = React.useState(false)
+  const [lines, setLines] = React.useState([])
 
   React.useEffect(() => {
     void (async () => {
       const settings = await loadSettings()
       setUrl((settings && settings.serverUrl) || '')
       setUsername((settings && settings.lastUsername) || '')
+      setLoaded(true)
     })()
   }, [])
 
-  async function saveServer(event) {
-    event.preventDefault()
-    if (busy) return
-    setBusy('server')
-    setError('')
-    setMessage('')
-    try {
-      const result = await call('/api/oa/settings/server', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ serverUrl: url.trim() }),
-      })
-      setMessage(`已连接：${result.name || result.serverUrl}（${result.apiVersion || 'v1'}）`)
-      await loadSettings()
-      await boot()
-    } catch (e) {
-      setError(e.message || '连接失败')
-    } finally {
-      setBusy('')
-    }
+  const missing = [
+    !url.trim() && '服务器地址',
+    !username.trim() && '用户名',
+    !password && '密码',
+  ].filter(Boolean)
+  const ready = loaded && missing.length === 0
+  const canSubmit = ready && !busy
+  const authenticated = s.status === 'authenticated'
+  // 已登录时只留「退出登录」：换服务器/换账号先退出，避免登录态与草稿互相打架
+  const showForm = !authenticated
+
+  /** 改输入就丢掉上一次的结果：那些行说的是"上一次那个地址/账号"，不该留在眼前 */
+  const edit = (setter) => (event) => {
+    setter(event.target.value)
+    if (lines.length) setLines([])
   }
 
-  async function login(event) {
+  /** 把第 index 行从「进行中」改成结果（行是追加的，位置固定） */
+  function setLine(index, line) {
+    setLines((prev) => {
+      const next = prev.slice()
+      next[index] = line
+      return next
+    })
+  }
+
+  async function connect(event) {
     event.preventDefault()
-    if (busy) return
-    setBusy('login')
-    setError('')
-    setMessage('')
+    if (!canSubmit) return
+    setBusy(true)
+    setLines([{ kind: 'pending', text: '正在检测服务器…' }])
+
+    // ① 探活：地址格式、服务身份、版本兼容
+    const diag = await fetchDiagnostics(url.trim())
+    if (!diag) {
+      setLine(0, { kind: 'fail', text: '检测请求没发出去，请稍后重试' })
+      setBusy(false)
+      return
+    }
+    if (!diag.validUrl || !diag.reachable) {
+      setLine(0, { kind: 'fail', text: diag.message || '连不上这个地址' })
+      setBusy(false)
+      return
+    }
+    if (!diag.compatible) {
+      setLine(0, { kind: 'fail', text: diag.message || '插件版本过低' })
+      setBusy(false)
+      return
+    }
+    setLine(0, {
+      kind: 'ok',
+      text: `服务器可达：${diag.serverName || hostOf(diag.serverUrl)}（${diag.apiVersion || 'v1'}${diag.latencyMs ? `，${diag.latencyMs}ms` : ''}）`,
+    })
+
+    // ② 登录：host 侧先在这台服务器上验证，成功了才落盘
+    setLines((prev) => [...prev, { kind: 'pending', text: '正在登录…' }])
+    let result
     try {
-      await call('/api/oa/session/login', {
+      result = await call('/api/oa/session/login', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ username: username.trim(), password }),
+        body: JSON.stringify({ serverUrl: url.trim(), username: username.trim(), password }),
       })
-      setPassword('')
-      await loadSettings()
-      await boot()
-      setMessage('登录成功')
     } catch (e) {
-      const code = e.errorCode || ''
-      setError(
-        code === 'NETWORK'
-          ? '无法连接服务器，请先检查上面的服务器地址'
-          : code === 'NO_SERVER'
-            ? '尚未配置服务器地址'
-            : e.message || '登录失败',
-      )
-    } finally {
-      setBusy('')
+      setLine(1, { kind: 'fail', text: loginFailureText(e) })
+      setBusy(false)
+      return
     }
+
+    // 客户端 bundle 可以热刷新，host 半部却要重启才换：旧 host 会忽略 serverUrl，
+    // 悄悄登录到原来那台服务器。这种"半升级"必须在界面上拦住，不能显示成功。
+    if (!result || !sameServer(result.serverUrl, url)) {
+      setLine(1, { kind: 'fail', text: '插件服务端还是旧版本：这台服务器没被切换，请重启 DSH 后再试' })
+      setBusy(false)
+      return
+    }
+
+    setPassword('')
+    await loadSettings()
+    await boot()
+    const who = (state.user && (state.user.nickname || state.user.username)) || username.trim()
+    setLine(1, { kind: 'ok', text: `登录成功：${who}${result && result.kicked ? '（原设备已下线）' : ''}` })
+    setBusy(false)
   }
 
   async function logout() {
@@ -192,7 +233,8 @@ function OaConnectionSection() {
       await call('/api/oa/session/logout', { method: 'POST' })
     } catch {}
     patch({ status: 'anonymous', user: null, capabilities: new Set() })
-    setMessage('已退出登录')
+    setPassword('')
+    setLines([])
   }
 
   const sourceText = { user: '本机设置', env: '环境变量', config: '插件配置', none: '未配置' }
@@ -204,90 +246,99 @@ function OaConnectionSection() {
     blocked: '版本不兼容',
   }
 
-  return React.createElement(
-    'div',
-    { style: styles.settingsSection },
+  return (
+    <div style={styles.settingsSection}>
+      {/* ① 当前连接：永远说"现在这条连接"是什么，不随输入框里的草稿变 */}
+      <div style={styles.settingsRow}>
+        <span style={styles.settingsLabel}>当前服务器</span>
+        <span style={styles.settingsValue}>{hostOf(s.settings && s.settings.serverUrl)}</span>
+        <span style={styles.badge2}>{sourceText[(s.settings && s.settings.source) || 'none']}</span>
+        <span style={s.status === 'authenticated' ? styles.badgeOk : styles.badge2}>
+          {s.status === 'authenticated'
+            ? `已登录：${(s.user && (s.user.nickname || s.user.username)) || ''}`
+            : statusText[s.status] || s.status}
+        </span>
+      </div>
 
-    // ① 当前状态
-    React.createElement(
-      'div',
-      { style: styles.settingsRow },
-      React.createElement('span', { style: styles.settingsLabel }, '当前服务器'),
-      React.createElement('span', { style: styles.settingsValue }, hostOf(s.settings && s.settings.serverUrl)),
-      React.createElement('span', { style: styles.badge2 }, sourceText[(s.settings && s.settings.source) || 'none']),
-      React.createElement(
-        'span',
-        { style: s.status === 'authenticated' ? styles.badgeOk : styles.badge2 },
-        s.status === 'authenticated'
-          ? `已登录：${(s.user && (s.user.nickname || s.user.username)) || ''}`
-          : statusText[s.status] || s.status,
-      ),
-    ),
+      {/* 已登录：只留退出登录。换服务器/换账号先退出，避免两套状态同时出现 */}
+      {authenticated ? (
+        <div style={styles.settingsForm}>
+          <button style={styles.link} type="button" disabled={busy} onClick={logout}>
+            退出登录
+          </button>
+          <span style={styles.settingsMuted}>要修改连接信息，请先退出登录</span>
+        </div>
+      ) : null}
 
-    // ② 地址
-    React.createElement(
-      'form',
-      { style: styles.settingsForm, onSubmit: saveServer },
-      React.createElement('input', {
-        style: { ...styles.input, flex: 1, minWidth: 260 },
-        placeholder: 'https://oa.example.com',
-        value: url,
-        onChange: (e) => setUrl(e.target.value),
-      }),
-      React.createElement(
-        'button',
-        { style: { ...styles.primary, opacity: busy === 'server' ? 0.6 : 1 }, type: 'submit', disabled: Boolean(busy) },
-        busy === 'server' ? '连接中…' : '测试并保存',
-      ),
-    ),
+      {/* ② 三项一起填，一个按钮：只在未登录时出现 */}
+      {showForm ? (
+        <form style={styles.settingsForm} onSubmit={connect}>
+          <input
+            style={{ ...styles.input, flex: '1 1 100%', minWidth: 260 }}
+            placeholder="服务器地址，如 https://oa.example.com"
+            aria-label="服务器地址"
+            autoComplete="url"
+            value={url}
+            disabled={busy}
+            onChange={edit(setUrl)}
+          />
+          <input
+            style={{ ...styles.input, width: 160 }}
+            placeholder="OA 用户名"
+            aria-label="OA 用户名"
+            autoComplete="username"
+            value={username}
+            disabled={busy}
+            onChange={edit(setUsername)}
+          />
+          <input
+            style={{ ...styles.input, width: 160 }}
+            type="password"
+            placeholder="密码"
+            aria-label="密码"
+            autoComplete="current-password"
+            value={password}
+            disabled={busy}
+            onChange={edit(setPassword)}
+          />
+          <button
+            style={{ ...styles.primary, opacity: canSubmit ? 1 : 0.55, cursor: canSubmit ? 'pointer' : 'not-allowed' }}
+            type="submit"
+            disabled={!canSubmit}
+          >
+            {busy ? '连接中…' : '连接并登录'}
+          </button>
+        </form>
+      ) : null}
+      {showForm && loaded && missing.length ? (
+        <div style={styles.settingsMuted}>还缺：{missing.join('、')}</div>
+      ) : null}
 
-    // ③ 登录（已登录时换成退出）
-    s.status === 'authenticated'
-      ? React.createElement(
-          'div',
-          { style: styles.settingsForm },
-          React.createElement('button', { style: styles.link, type: 'button', onClick: logout }, '退出登录'),
-        )
-      : React.createElement(
-          'form',
-          { style: styles.settingsForm, onSubmit: login },
-          React.createElement('input', {
-            style: { ...styles.input, width: 160 },
-            placeholder: 'OA 用户名',
-            value: username,
-            onChange: (e) => setUsername(e.target.value),
-          }),
-          React.createElement('input', {
-            style: { ...styles.input, width: 160 },
-            type: 'password',
-            placeholder: '密码',
-            value: password,
-            onChange: (e) => setPassword(e.target.value),
-          }),
-          React.createElement(
-            'button',
-            { style: { ...styles.primary, opacity: busy === 'login' ? 0.6 : 1 }, type: 'submit', disabled: Boolean(busy) },
-            busy === 'login' ? '登录中…' : '登录',
-          ),
-        ),
+      {/* ③ 分步结果：第一行探服务器，第二行登录 */}
+      {lines.length ? (
+        <div style={styles.steps} aria-live="polite">
+          {lines.map((line, index) => (
+            <div
+              key={index}
+              style={line.kind === 'ok' ? styles.stepOk : line.kind === 'fail' ? styles.stepFail : styles.stepPending}
+            >
+              <span style={styles.stepIcon}>{line.kind === 'ok' ? '✓' : line.kind === 'fail' ? '✗' : '…'}</span>
+              {line.text}
+            </div>
+          ))}
+        </div>
+      ) : null}
 
-    s.status === 'blocked'
-      ? React.createElement('div', { style: styles.settingsError }, s.blockedReason || '插件版本过低，请升级后重试。')
-      : null,
-    s.status === 'offline'
-      ? React.createElement(
-          'div',
-          { style: styles.settingsHint },
-          `连不上服务器${s.offlineReason ? `：${s.offlineReason}` : ''}。请确认地址与网络后点「测试并保存」。`,
-        )
-      : null,
-    message ? React.createElement('div', { style: styles.settingsOk }, message) : null,
-    error ? React.createElement('div', { style: styles.error }, error) : null,
-    React.createElement(
-      'div',
-      { style: styles.settingsMuted },
-      '这里是插件唯一的登录入口：登录一次后，重启 DSH 不需要再登录。',
-    ),
+      {s.status === 'blocked' ? (
+        <div style={styles.settingsError}>{s.blockedReason || '插件版本过低，请升级后重试。'}</div>
+      ) : null}
+      {s.status === 'offline' ? (
+        <div style={styles.settingsHint}>
+          {`连不上服务器${s.offlineReason ? `：${s.offlineReason}` : ''}。确认地址与网络后点「连接并登录」。`}
+        </div>
+      ) : null}
+      <div style={styles.settingsMuted}>这里是插件唯一的登录入口：登录一次后，重启 DSH 不需要再登录。</div>
+    </div>
   )
 }
 
@@ -306,9 +357,18 @@ function hostOf(url) {
   }
 }
 
+/** 比较两个地址是不是同一台服务器（忽略大小写、尾斜杠） */
+function sameServer(left, right) {
+  try {
+    const normalize = (value) => new URL(value).href.replace(/\/+$/, '')
+    return normalize(left) === normalize(right)
+  } catch {
+    return false
+  }
+}
+
 const styles = {
   input: { height: 40, padding: '0 12px', border: '1px solid #d0d3d9', borderRadius: 8, fontSize: 14 },
-  error: { color: '#d93026', fontSize: 13 },
   primary: { height: 30, padding: '0 14px', border: 'none', borderRadius: 6, background: '#1f6feb', color: '#fff', cursor: 'pointer', fontSize: 13, whiteSpace: 'nowrap' },
   settingsSection: { display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 720 },
   settingsRow: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
@@ -317,7 +377,11 @@ const styles = {
   settingsForm: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   settingsMuted: { fontSize: 12, color: '#8f959e' },
   settingsHint: { fontSize: 12, color: '#8a6d3b', background: '#fff8e6', border: '1px solid #ffe0a3', borderRadius: 6, padding: '6px 10px' },
-  settingsOk: { fontSize: 12, color: '#1a7f37' },
+  steps: { display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, lineHeight: '18px' },
+  stepOk: { color: '#1a7f37' },
+  stepFail: { color: '#d93026' },
+  stepPending: { color: '#8f959e' },
+  stepIcon: { display: 'inline-block', width: 14 },
   badge2: { fontSize: 11, color: '#4e5969', background: '#f2f3f5', borderRadius: 4, padding: '1px 6px' },
   badgeOk: { fontSize: 11, color: '#1a7f37', background: '#e8f5ec', borderRadius: 4, padding: '1px 6px' },
   settingsError: { fontSize: 12, color: '#d93026', background: '#fff1f0', border: '1px solid #ffccc7', borderRadius: 6, padding: '6px 10px' },
@@ -335,14 +399,32 @@ async function loadSettings() {
   }
 }
 
-async function fetchDiagnostics() {
+/** 探活：给了地址就诊断那一个候选地址（设置页「连接并登录」第一步），否则诊断当前地址 */
+async function fetchDiagnostics(serverUrl) {
   try {
-    const diag = await call('/api/oa/diagnostics')
+    const diag = await call(
+      '/api/oa/diagnostics',
+      serverUrl
+        ? {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ serverUrl }),
+          }
+        : undefined,
+    )
     patch({ diagnostics: diag })
     return diag
   } catch {
     return null
   }
+}
+
+/** 登录失败：服务端的原话最准（密码错就是「用户名或密码错误」），网络类错误补一句人话 */
+function loginFailureText(error) {
+  const code = (error && error.errorCode) || ''
+  if (code === 'NETWORK') return '服务器刚才还通，但登录请求没发出去（网络断了或超时）'
+  if (code === 'NO_SERVER') return '还没配置服务器地址'
+  return (error && error.message) || '登录失败'
 }
 
 async function boot() {

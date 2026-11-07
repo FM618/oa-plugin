@@ -23,17 +23,21 @@ cd oa-plugin
 pnpm -r exec npm version patch --no-git-tag-version
 ```
 
-- 版本保持一致（总装包与其他三个同版本，便于排查）；
+- 版本保持一致（总装包与其他两个同版本，便于排查）；
 - `0.x` 阶段 minor 版本允许破坏性变更，`1.0.0` 之后再严格遵守 semver；
-- 每个包发布时会自动带上 `LICENSE`、`NOTICE`（已写进 `files`）。
+- 每个包发布时会自动带上 `LICENSE`、`NOTICE`（已写进 `files`）；
+- **装进过 profile 的版本号不再复用**，内容变了就升版本（D-081）。
 
 ## 2. 打包
 
 ```bash
-pnpm run pack        # 产物在 dist/，四个 tgz
+pnpm run pack        # 产物在 dist/，三个 tgz
 ```
 
 包名形如 `fm618-oa-0.1.0.tgz`（scope 里的 `@` 和 `/` 被替换为 `-`）。
+
+**打包只新增、不删除**（D-082）：`dist/` 里所有历史版本的 tgz 都会保留、同时存在，
+便于回装旧版；同一版本号重复打包会被脚本拒绝，请先升版本。
 
 ## 2.5 预检（强烈建议）
 
