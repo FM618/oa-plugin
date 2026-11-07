@@ -1,6 +1,6 @@
 # DSH OA 插件
 
-把 OA 的工作日志接进 [DeepSeek Harness](https://github.com/FM618)（DSH 桌面版 / Web 版）。
+把 OA 的工作日志接进 DeepSeek Harness（DSH 桌面版 / Web 版）。
 在 DSH 侧边栏直接看周视图、记日志，不用切浏览器。
 
 ## 能力
@@ -37,6 +37,12 @@ dsh plugin add @fm618/oa-worklog    # 工作日志模块
 
 模块缺少运行时会静默等待（不报错、不工作），所以别把顺序弄反。
 
+## 升级
+
+DSH **不会自动升级插件**。升级方式：在插件页卸载旧版，再安装新版。
+
+升级不会丢失登录状态——令牌存在 DSH 的凭据服务里，与插件版本无关。
+
 ## 包说明
 
 | 包 | 作用 |
@@ -49,7 +55,7 @@ dsh plugin add @fm618/oa-worklog    # 工作日志模块
 
 | 项 | 要求 |
 | :--- | :--- |
-| DSH | 0.2 及以上（桌面版 / Web 版） |
+| DSH | 0.2（桌面版 / Web 版）；当前在 0.2.0-rc.2 上开发与验证 |
 | OA 服务端 | 提供客户端接口面 `/api/client/v1/**` 与发现端点 `/.well-known/oa-server` |
 | 服务端最低客户端版本 | 不低于 `0.1.0`（插件会读取并校验，低于要求时拒绝连接） |
 | Node（仅开发） | ≥ 22，pnpm ≥ 9 |
@@ -64,6 +70,14 @@ pnpm run pack          # 产出 dist/*.tgz
 ```
 
 发布流程见 [RELEASING.md](RELEASING.md)。
+
+## 问题反馈
+
+请到 <https://github.com/FM618/oa-plugin/issues> 提交，附上：
+
+- 插件版本（设置 → OA 连接 里显示的状态）
+- DSH 版本与平台（桌面 / Web）
+- 「OA 连接」里「测试并保存」的报错文案
 
 ## 许可
 
