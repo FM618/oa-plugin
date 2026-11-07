@@ -2,24 +2,24 @@
 
 面向维护者。用户侧安装说明见 [`plugins/oa-bundle/README.md`](plugins/oa-bundle/README.md)。
 
-## 0. 一次性准备
+## 0. 前置条件
 
-| 步骤 | 做什么 | 说明 |
-| :--- | :--- | :--- |
-| 1 | 注册 npm 账号 | **用公司邮箱**，不用个人邮箱 |
-| 2 | 开启 2FA | npm 对发布操作要求二次验证 |
-| 3 | 建组织：[npmjs.com/org/create](https://www.npmjs.com/org/create) | 组织名必须是 **`fm618`**，直接决定 scope |
-| 4 | 邀请维护者 | 按最小权限分配，不要共用一个账号 |
-| 5 | `npm login` | 本机登录一次即可 |
+发布目标是 npm scope **`@fm618`**（由本公司的 npm 组织持有）。发布者需满足：
 
-> **`@fm618` 是"先到先得"的公共命名空间**：2026-11-05 查过无记录。
-> 别人可以先注册，注册后你就用不了——尽早建。
+| 条件 | 怎么确认 |
+| :--- | :--- |
+| 是 `fm618` 组织成员 | `npm org ls fm618 --registry=https://registry.npmjs.org/` 能看到自己 |
+| 已登录**官方源** | `npm whoami --registry=https://registry.npmjs.org/` |
+| 账号已开 2FA | 发布时会要求一次性验证码 |
+
+> 本机默认源常被设成国内镜像；镜像是只读同步、没有账号体系，
+> 登录与发布都必须显式指向 `https://registry.npmjs.org/`。
 
 ## 1. 版本与内容
 
 ```bash
 cd oa-plugin
-# 改版本号：四个包的 version 必须一起改
+# 改版本号：三个包的 version 必须一起改
 pnpm -r exec npm version patch --no-git-tag-version
 ```
 
@@ -42,7 +42,7 @@ pnpm run pack        # 产物在 dist/，三个 tgz
 ## 2.5 预检（强烈建议）
 
 ```bash
-npm publish ./dist/fm618-plugin-kit-0.1.0.tgz --dry-run --registry=https://registry.npmjs.org/
+npm publish ./dist/fm618-oa-runtime-0.1.0.tgz --dry-run --registry=https://registry.npmjs.org/
 ```
 
 `--dry-run` 不上传，但会列出**将要发布的文件清单**。用它确认 `LICENSE`、`NOTICE`、
@@ -52,7 +52,6 @@ npm publish ./dist/fm618-plugin-kit-0.1.0.tgz --dry-run --registry=https://regis
 ## 3. 发布（顺序不能反）
 
 ```bash
-npm publish ./dist/fm618-plugin-kit-0.1.0.tgz
 npm publish ./dist/fm618-oa-runtime-0.1.0.tgz
 npm publish ./dist/fm618-oa-worklog-0.1.0.tgz
 npm publish ./dist/fm618-oa-0.1.0.tgz
@@ -60,7 +59,7 @@ npm publish ./dist/fm618-oa-0.1.0.tgz
 
 | 规则 | 原因 |
 | :--- | :--- |
-| **先发被依赖的，最后发总装包** | 总装包依赖另外三个，顺序反了用户装不上 |
+| **先发被依赖的，最后发总装包** | 总装包依赖另外两个，顺序反了用户装不上 |
 | 不用手工带 `--access public` | 已写进各包 `publishConfig`，缺了它 scoped 包会被当私有包 |
 | 已经写进 `publishConfig.access` | 即使忘带参数也不会发成私有 |
 
@@ -81,7 +80,7 @@ npm i @fm618/oa --registry https://registry.npmjs.org
 ls node_modules/@fm618/
 ```
 
-期望：`node_modules/@fm618/` 下有 `oa`、`oa-runtime`、`oa-worklog`、`plugin-kit` 四个。
+期望：`node_modules/@fm618/` 下有 `oa`、`oa-runtime`、`oa-worklog` 三个。
 
 ## 4.4 依赖关系（发布顺序的依据）
 
@@ -111,7 +110,7 @@ npm login  --registry=https://registry.npmjs.org/
 npm whoami --registry=https://registry.npmjs.org/
 ```
 
-发布不用手工加参数：四个包的 `publishConfig` 里已固定
+发布不用手工加参数：三个包的 `publishConfig` 里已固定
 `"registry": "https://registry.npmjs.org/"`，`npm publish` 会自动走官方源。
 
 ### 发布时要求 `git ls-remote ssh://git@github.com/...`
