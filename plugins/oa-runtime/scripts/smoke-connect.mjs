@@ -72,13 +72,20 @@ function startServer({ name, id, user, password, minClientVersion = '0.0.1' }) {
       return send(404, { code: 404, message: 'not found', data: null })
     })
   })
+  // 只绑回环：假服务器不能被局域网访问
   return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server)))
+}
+
+/** 端口是随机分配的，URL 按实际绑定地址拼，不写死回环 IP */
+function originOf(server) {
+  const { address, port } = server.address()
+  return `http://${address.includes(':') ? `[${address}]` : address}:${port}`
 }
 
 const serverA = await startServer({ name: 'OA A', id: 'a', user: 'shuser', password: 'secret-a' })
 const serverB = await startServer({ name: 'OA B', id: 'b', user: 'shuser', password: 'secret-b' })
-const urlA = `http://127.0.0.1:${serverA.address().port}`
-const urlB = `http://127.0.0.1:${serverB.address().port}`
+const urlA = originOf(serverA)
+const urlB = originOf(serverB)
 
 let failures = 0
 function check(name, condition, detail) {
@@ -207,7 +214,8 @@ console.log('场景 1：已登录 A → 换 B（原子提交）→ 密码错回 
   })
   check('同地址重登 switched=false', again.status === 200 && again.body.data.switched === false, again)
 
-  const down = await host.call('POST', '/api/oa/diagnostics', { serverUrl: 'http://127.0.0.1:1' })
+  // localhost:1 在本机必然拒绝：用来测「不可达」这条分支，且不引入字面量 IP
+  const down = await host.call('POST', '/api/oa/diagnostics', { serverUrl: 'http://localhost:1' })
   check('不可达：reachable=false', down.status === 200 && down.body.data.reachable === false, down)
   check('不可达：一句人话', /连不上这个地址/.test(down.body.data.message || ''), down.body.data)
 
